@@ -104,7 +104,7 @@ if (query === "") {alert("텍스트를 입력하세요")}
     li.innerHTML = `<a href="${item.url}" target="_blank" style="display:inline;">${item.title}</a><p style="display:inline;">[${item.type}]</p><br>${item.desc}`;
     list.appendChild(li);
 
-if ((index + 1) % 5 === 0) {
+if ((index + 1) % 30 === 0) {
   const adLi = document.createElement('li');
   const adIns = document.createElement('ins');
   adIns.className = 'adsbygoogle';
