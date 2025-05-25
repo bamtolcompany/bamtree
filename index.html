@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>밤나무-개발자용 검색엔진</title>
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
+  img {width:130%; height:100%;}
+    body {font-family:sans-serif; background-color:white;}
+    input {width:100%; height:40px; font-size:100%; border-radius:30px;}
+    button {width:5%; background-color:white;}
+    ul {padding:0; list-style:none;}
+    li {margin-bottom:10px; background: #fff; padding: 10px; border-radius: 5px; border:solid gray 2px;}
+    a {text-decoration:none; color: #0366d6; font-weight: bold; }
+    #moreBtn {display:none; margin-top: 10px; }
+  h1 {font-family: 'Gowun Dodum', sans; text-align:center;}
+  </style>
+</head>
+<body>
+  <h1>밤나무</h1>
+  <div style="display: flex; gap:5px;">
+  <input type="search" id="query" placeholder="검색어를 입력하세요">
+  <button onclick="search()">검색</button>
+  </div>
+  <ul id="mixedResults">검색결과가 여기 표시됩니다</ul>
+  <button id="moreBtn" onclick="showAllResults()">더보기</button>
+
+  <script>
+  
+    let mixedData = [];
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("query").addEventListener("keyup", function (event) {
+    if (event.key === "Enter") {
+      search();
+    }
+  });
+});
+    function search() {
+      
+      const query = document.getElementById('query').value.trim();
+      const resultList = document.getElementById('mixedResults');
+      const moreBtn = document.getElementById('moreBtn');
+      resultList.innerHTML = '검색 중...';
+      moreBtn.style.display = 'none';
+      mixedData = [];
+
+      const githubURL = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc`;
+      const stackURL = `https://api.stackexchange.com/2.3/search?order=desc&sort=relevance&intitle=${encodeURIComponent(query)}&site=stackoverflow&pagesize=30`;
+      const hackURL = `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(query)}`;
+if (query === "") {alert("텍스트를 입력하세요")}
+      Promise.all([
+        fetch(githubURL).then(res => res.json()),
+        fetch(stackURL).then(res => res.json()),
+      fetch(hackURL).then(res => res.json()),
+      ])
+      .then(([githubData, stackData, hnData]) => {
+        mixedData = [];
+
+        githubData.items.slice(0, 30).forEach(repo => {
+          mixedData.push({
+            type: 'github',
+            title: repo.full_name,
+            url: repo.html_url,
+            desc: repo.description || '설명 없음'
+          });
+        });
+
+        stackData.items.slice(0, 30).forEach(post => {
+          mixedData.push({
+            type: 'stackoverflow',
+            title: post.title,
+            url: post.link,
+            desc: `점수: ${post.score} / 답변수: ${post.answer_count}`
+          });
+        });
+    hnData.hits.slice(0, 30).forEach(post => {
+      mixedData.push({
+        type: 'hackernews',
+        title: post.title || post.story_title,
+        url: post.url || post.story_url,
+        desc: `점수: ${post.points} / 댓글수: ${post.num_comments}`
+      });
+    });
+        
+        mixedData.sort(() => Math.random() - 0.5);
+
+        renderResults(20);
+        if (mixedData.length > 20) moreBtn.style.display = 'inline-block';
+      })
+      .catch(err => {
+        resultList.innerHTML = 'err';
+      });
+    }
+
+    function renderResults(count) {
+      const list = document.getElementById('mixedResults');
+      list.innerHTML = '';
+      mixedData.slice(0, count).forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="${item.url}" target="_blank" style="display:inline;">${item.title}</a><p style="display:inline;">[${item.type}]</p><br>${item.desc}`;
+        list.appendChild(li);
+      });
+    }
+
+    function showAllResults() {
+      renderResults(mixedData.length);
+      document.getElementById('moreBtn').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
