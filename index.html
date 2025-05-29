@@ -94,6 +94,10 @@ if (query === "") {alert("텍스트를 입력하세요")}
     });
         
         mixedData.sort(() => Math.random() - 0.5);
+if (mixedData.length === 0) {
+  resultList.innerHTML = '<p>검색 결과가 없습니다. 도움말:모든 단어의 철자가 정확한지 확인하세요.<br>다른 검색어를 사용해 보세요.<br>더 일반적인 검색어를 사용해 보세요.<br>키워드 수를 줄여보세요.<br>영어로 검색해보세요.</p>';
+  return;
+}
 
         renderResults(20);
         if (mixedData.length > 20) moreBtn.style.display = 'inline-block';
